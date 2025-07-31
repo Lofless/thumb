@@ -93,7 +93,7 @@ public class ThumbServiceImpl extends ServiceImpl<ThumbMapper, Thumb>
                    throw new RuntimeException("用户没有点赞");
                }
 
-                Boolean update = blogService.lambdaUpdate()
+                boolean update = blogService.lambdaUpdate()
                         .eq(Blog::getId, blogId)
                         .setSql("thumbcount = thumbcount - 1")
                         .update();
