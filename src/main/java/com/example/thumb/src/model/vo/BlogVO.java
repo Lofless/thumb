@@ -1,4 +1,4 @@
-package com.example.thumb.model.vo;
+package com.example.thumb.src.model.vo;
 
 import lombok.Data;
 

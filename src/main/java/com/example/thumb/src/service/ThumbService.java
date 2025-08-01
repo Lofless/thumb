@@ -1,6 +1,6 @@
 package com.example.thumb.src.service;
 
-import com.example.thumb.model.dto.thumb.DoThumbRequest;
+import com.example.thumb.src.model.dto.thumb.DoThumbRequest;
 import com.example.thumb.src.domain.Thumb;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,4 +17,7 @@ public interface ThumbService extends IService<Thumb> {
 
     // 取消点赞
     Boolean undoThumb(DoThumbRequest doThumbRequest, HttpServletRequest request);
+
+    // 是否已点赞
+    Boolean hasThumb(Long blogId, Long userId);
 }

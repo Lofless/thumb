@@ -1,6 +1,6 @@
 package com.example.thumb.src.controller;
 
-import com.example.thumb.model.dto.thumb.DoThumbRequest;
+import com.example.thumb.src.model.dto.thumb.DoThumbRequest;
 import com.example.thumb.src.common.BaseResponse;
 import com.example.thumb.src.common.ResultUtils;
 import com.example.thumb.src.service.ThumbService;

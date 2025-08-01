@@ -1,6 +1,6 @@
 package com.example.thumb.src.service;
 
-import com.example.thumb.model.vo.BlogVO;
+import com.example.thumb.src.model.vo.BlogVO;
 import com.example.thumb.src.domain.Blog;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;

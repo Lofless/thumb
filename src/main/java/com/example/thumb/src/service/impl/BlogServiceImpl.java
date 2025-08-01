@@ -3,7 +3,7 @@ package com.example.thumb.src.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.thumb.model.vo.BlogVO;
+import com.example.thumb.src.model.vo.BlogVO;
 import com.example.thumb.src.domain.Blog;
 import com.example.thumb.src.domain.Thumb;
 import com.example.thumb.src.domain.User;

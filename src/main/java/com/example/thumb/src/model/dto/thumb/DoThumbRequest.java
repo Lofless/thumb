@@ -1,4 +1,4 @@
-package com.example.thumb.model.dto.thumb;
+package com.example.thumb.src.model.dto.thumb;
 
 import lombok.Data;
 
