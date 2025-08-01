@@ -42,6 +42,10 @@ public class ThumbServiceImpl extends ServiceImpl<ThumbMapper, Thumb>
 
             // 编程式事物
             return transactionTemplate.execute(status -> {
+                /*
+                要让锁的作用域完全包裹住事物，不然就会出现数据库数据不一致的情况
+                如果A在锁释放后才提交事物，但是B在A提交事物前，B会获取到锁，因为先释放锁了，那么B获取到的数据库数据就是A未修改的，因为还未提交事务
+                 */
                 // 获取要点赞的帖子id
                 long blogId = doThumbRequest.getBlogId();
                 // 判断数据库是否存在这条记录
