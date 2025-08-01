@@ -33,6 +33,12 @@ public class ThumbServiceImpl extends ServiceImpl<ThumbMapper, Thumb>
     private final BlogService blogService;
     private final RedisTemplate<String, Object> redisTemplate;
 
+    /**
+     * 点赞
+     * @param doThumbRequest
+     * @param request
+     * @return
+     */
     @Override
     public Boolean doThumb(DoThumbRequest doThumbRequest, HttpServletRequest request) {
         if(doThumbRequest == null || doThumbRequest.getBlogId() == null){
@@ -85,7 +91,12 @@ public class ThumbServiceImpl extends ServiceImpl<ThumbMapper, Thumb>
             });
         }
     }
-
+    /**
+     * 取消点赞
+     * @param doThumbRequest
+     * @param request
+     * @return
+     */
     @Override
     public Boolean undoThumb(DoThumbRequest doThumbRequest, HttpServletRequest request) {
         if(doThumbRequest == null || doThumbRequest.getBlogId() == null){
@@ -95,24 +106,39 @@ public class ThumbServiceImpl extends ServiceImpl<ThumbMapper, Thumb>
         User loginUser = userService.getLoginUser(request);
         synchronized(loginUser.getId().toString().intern()){
             return transactionTemplate.execute(status -> {
-               long blogId = doThumbRequest.getBlogId();
+                Long blogId = doThumbRequest.getBlogId();
 
-               Thumb thumb = this.lambdaQuery()
+                // 从redis中获取点赞情况
+                Object thumbObj = redisTemplate.opsForHash().get(ThumbConstant.USER_THUMB_KEY_PREFIX+loginUser.getId(), blogId.toString());
+                if(thumbObj == null){
+                    throw new RuntimeException("用户没有点赞");
+                }
+
+                // 从redis获取到了 value -> thumb中的 id
+                Long thumbId = Long.valueOf(thumbObj.toString());
+
+               /*Thumb thumb = this.lambdaQuery()
                        .eq(Thumb::getBlogid, blogId)
                        .eq(Thumb::getUserid, loginUser.getId())
-                       .one();
+                       .one();*/
 
-               // 不存在这个点赞记录，直接throw
+               /*// 不存在这个点赞记录，直接throw
                if(thumb == null) {
                    throw new RuntimeException("用户没有点赞");
-               }
+               }*/
 
                 boolean update = blogService.lambdaUpdate()
                         .eq(Blog::getId, blogId)
                         .setSql("thumbcount = thumbcount - 1")
                         .update();
 
-                return update && this.removeById(thumb.getId());
+                boolean success = update && this.removeById(thumbId);
+                // 删除redis中的数据
+                if(success){
+                    redisTemplate.opsForHash().delete(ThumbConstant.USER_THUMB_KEY_PREFIX+loginUser.getId(), blogId.toString());
+                }
+
+                return success;
             });
         }
     }
