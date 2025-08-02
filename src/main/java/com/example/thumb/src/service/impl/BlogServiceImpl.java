@@ -3,6 +3,7 @@ package com.example.thumb.src.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.thumb.src.constant.ThumbConstant;
 import com.example.thumb.src.model.vo.BlogVO;
 import com.example.thumb.src.domain.Blog;
 import com.example.thumb.src.domain.Thumb;
@@ -14,7 +15,9 @@ import com.example.thumb.src.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -36,6 +39,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
     @Resource
     @Lazy
     private ThumbService thumbService;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
 
     /**
@@ -65,13 +70,16 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
             return blogVO;
         }
         // 查询是否点赞，如果点赞那么就可以通过点赞表查询到
-        Thumb thumb = thumbService.lambdaQuery()
+        // 使用redis优化
+        boolean exists = thumbService.hasThumb(blog.getId(), loginUser.getId());
+        blogVO.setHasThumb(exists);
+        /*Thumb thumb = thumbService.lambdaQuery()
                 .eq(Thumb::getUserid, loginUser.getId())
                 .eq(Thumb::getBlogid, blog.getId())
                 .one();
 
-        blogVO.setHasThumb(thumb != null);
-//        log.info("blog.coverImg: {}", blogVO.getCoverimg());
+        blogVO.setHasThumb(thumb != null);*/
+        /*log.info("blog.coverImg: {}", blogVO.getCoverimg());*/
         return blogVO;
     }
 
@@ -91,15 +99,29 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
         // 判断当前用户是否为空
         if(ObjUtil.isNotEmpty(loginUser)){
             // 获取当前用户点赞的博客ID存入到Set集合中
-            Set<Long> blogIdSet = blogList.stream().map(Blog::getId).collect(Collectors.toSet());
+            // redis优化
+            List<Object> blogIdList = blogList.stream().map(Blog::getId).collect(Collectors.toList());
+            /*Set<Long> blogIdSet = blogList.stream().map(Blog::getId).collect(Collectors.toSet());*/
+
             // 从数据库中根据blogId和userId来查询出user对这些blog的点赞情况
-            List<Thumb> thumbList = thumbService.lambdaQuery()
+            // redis优化
+            List<String> blogIdStringList = blogIdList.stream()
+                    .map(Object::toString)
+                    .collect(Collectors.toList());
+            List<Object> thumbList = redisTemplate.opsForHash().multiGet(ThumbConstant.USER_THUMB_KEY_PREFIX+loginUser.getId().toString(), (Collection<Object>)(Collection<?>)blogIdStringList);
+            for(int i = 0 ; i < blogIdList.size(); i ++ ){
+                if(blogIdList.get(i) == null){
+                    continue;
+                }
+                blogIdHasThumbMap.put(Long.valueOf(blogIdList.get(i).toString()), true);
+            }
+            /*List<Thumb> thumbList = thumbService.lambdaQuery()
                     .in(Thumb::getBlogid, blogIdSet)
                     .eq(Thumb::getUserid, loginUser.getId())
-                    .list();
+                    .list();*/
 
             // 获取thumbList中的数据，逐条处理，映射到map中，blogThumb指的是thumbList中的单条数据
-            thumbList.forEach(blogThumb -> blogIdHasThumbMap.put(blogThumb.getBlogid(), true));
+            /*thumbList.forEach(blogThumb -> blogIdHasThumbMap.put(blogThumb.getBlogid(), true));*/
         }
 
         // 创建一个空的BlogVO列表
