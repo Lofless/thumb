@@ -2,6 +2,9 @@ package com.example.thumb.src.mapper;
 
 import com.example.thumb.src.domain.Blog;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.Map;
 
 /**
 * @author yangguang
@@ -10,9 +13,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity generator.domain.Blog
 */
 public interface BlogMapper extends BaseMapper<Blog> {
-
+    int batchUpdateThumbCount(@Param("countMap") Map<Long, Long> countMap);
 }
-
-
-
-
